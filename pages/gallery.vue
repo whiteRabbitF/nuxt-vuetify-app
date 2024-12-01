@@ -1,12 +1,14 @@
 <template>
+ <div class="container-fluid">
   <v-container>
-    <GalleryGrid />
+    <GalleryPage />
   </v-container>
+ </div>
 </template>
 
 <script setup lang="ts">
-import GalleryGrid from '~/components/GalleryGrid.vue'
 import { VContainer } from "vuetify/components";
+import GalleryPage from "~/components/GalleryPage.vue";
 </script>
 
 <style scoped>

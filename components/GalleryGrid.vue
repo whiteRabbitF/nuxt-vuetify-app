@@ -1,58 +1,139 @@
 <template>
-  <v-container>
-    <v-row>
-      <!-- Отображаем фотографии только если они загружены -->
-      <v-col v-for="(photo, index) in photos" :key="index" cols="12" sm="6" md="4">
-        <v-card>
-          <v-img :src="photo.url" height="200px" lazy="false"></v-img>
-          <v-card-title>{{ photo.name }}</v-card-title>
-        </v-card>
-      </v-col>
-      <!-- Если фотографий нет, показываем сообщение -->
-      <v-col v-if="photos.length === 0" cols="12">
-        <v-alert type="info">Нет фотографий для отображения.</v-alert>
-      </v-col>
-    </v-row>
-
-    <!-- Кнопки на странице -->
-    <div class="d-flex flex-row gap-3 btn-group">
-      <v-btn color="primary" @click="openModal" class="btn">Добавить фотографию</v-btn>
-      <v-btn color="secondary" to="/gallery" class="btn">Перейти к галерее</v-btn>
+  <div class="container">
+    <div class="row">
+      <div class="col-12 col-sm-6 col-md-4 mb-4" v-for="(photo, index) in photos" :key="index">
+        <div class="card h-100">
+          <img :src="photo.url" class="card-img-top" alt="Photo" style="height: 500px; object-fit: cover;">
+          <div class="card-body">
+            <span class="card-title">
+              <strong>Название фото:</strong>
+              {{ photo.name }}
+            </span>
+            <button
+              class="btn btn-danger mt-2 delete"
+              title="Удалить"
+              @click="openDeleteModal(photo)">
+              <img
+                  alt="удалить"
+                  src="../public/icons/trash.svg"
+                  class="icon"
+              >
+            </button>
+            <button
+                class="btn btn-dark mt-2 delete"
+                title="Редактировать"
+                @click="openEditModal(photo)">
+              <img
+                  alt="редактировать"
+                  src="../public/icons/edit.svg"
+                  class="icon"
+              >
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="col-12" v-if="photos.length === 0">
+        <div class="alert alert-info" role="alert">Нет фотографий для отображения.</div>
+      </div>
     </div>
 
-    <!-- Модальное окно для добавления фотографии -->
+    <div class="d-flex flex-row gap-4 btn-group">
+      <button class="btn btn-primary" @click="openModal">Добавить фотографию</button>
+      <button class="btn btn-secondary" @click="$router.push('/gallery')">Перейти к галерее</button>
+    </div>
+
+    <!-- Модальные окна -->
     <PhotoModal
         v-model="dialog"
         @add-photo="addPhoto"
     />
-  </v-container>
+      <DeletePhotoModal
+      v-model="isOpen"
+      :photo="photoToDelete"
+      @close="closeModal"
+      @delete="deletePhoto"
+      />
+    <EditPhotoModal
+      v-model="editIsOpen"
+      :photo="photoToEdit"
+      @close="closeEditModal"
+      @edit-photo="editPhoto"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { usePhotos } from '~/stores/photos'; // Подключаем store с фотографиями
+import { usePhotos } from '~/stores/photos';
 import PhotoModal from '~/components/PhotoModal.vue';
-import { VDialog, VCard, VCardTitle, VCardText, VCardActions, VTextField, VBtn, VImg } from 'vuetify/components'
-const { photos, loadPhotos, addPhoto: addPhotoToStore } = usePhotos();
+import DeletePhotoModal from '~/components/DeletePhotoModal.vue';
+import EditPhotoModal from "~/components/EditPhotoModal.vue";
 
-// Состояние для отображения модального окна
+const { photos, loadPhotos, addPhoto: addPhotoToStore, deletePhoto: deletePhotoFromStore, updatePhoto } = usePhotos();
+
 const dialog = ref(false);
-
-// Открытие модального окна
+const isOpen = ref(false);
+const editIsOpen = ref(false)// Для синхронизации с модалкой удаления
+const photoToDelete = ref<{ name: string; url: string } | null>(null);
+const photoToEdit = ref<{ name: string; url: string } | null>(null)
 const openModal = () => {
   dialog.value = true;
 };
 
-// Функция для добавления фотографии в store
 const addPhoto = (photo: { name: string; url: string }) => {
-  addPhotoToStore(photo);  // Добавление фотографии в store
+  addPhotoToStore(photo);
 };
 
-// Загрузка фотографий при монтировании компонента
 onMounted(async () => {
-  await loadPhotos();  // Загружаем фотографии из IndexedDB
+  await loadPhotos();
 });
+
+const openDeleteModal = (photo: { name: string; url: string }) => {
+  console.log('openDeleteModal triggered');
+  console.log('Photo to delete:', photo);
+  photoToDelete.value = photo;
+  isOpen.value = true; // Открываем модалку удаления
+  console.log('isOpen after setting:', isOpen.value);
+};
+
+const openEditModal = (photo: { name: string; url: string }) => {
+  console.log('openDeleteModal triggered');
+  console.log('Photo to delete:', photo);
+  photoToEdit.value = photo;
+  editIsOpen.value = true; // Открываем модалку удаления
+  console.log('isOpen after setting:', editIsOpen.value);
+};
+
+const closeModal = () => {
+  isOpen.value = false;
+  photoToDelete.value = null;
+};
+
+const closeEditModal = () => {
+  isOpen.value = false;
+  //photoTo.value = null;
+};
+
+const deletePhoto = async () => {
+  console.log('deletePhoto triggered');
+  if (photoToDelete.value) {
+    console.log('Deleting photo:', photoToDelete.value);
+    await deletePhotoFromStore(photoToDelete.value.url);
+    closeModal();
+  }
+};
+
+const editPhoto = async (updatedPhoto: { name: string; url: string }) => {
+  try {
+    // Обновляем фотографию в хранилище Pinia
+    await updatePhoto(updatedPhoto);
+    console.log('Фото успешно обновлено:', updatedPhoto);
+  } catch (error) {
+    console.error('Ошибка при обновлении фотографии:', error);
+  }
+};
 </script>
+
 
 
 
@@ -60,17 +141,6 @@ onMounted(async () => {
 .btn-group {
   width: 50%;
   margin: 0 auto;
-  .btn {
-    &:hover {
-      cursor: pointer;
-      background-color: #0056b3 !important;
-      transform: scale(1.05);
-      transition: all 0.3s ease;
-    }
-
-    padding: 10px 20px;
-    font-weight: bold;
-  }
 }
 
 /* Анимация для кнопки */
@@ -80,6 +150,29 @@ onMounted(async () => {
 
 .btn:hover {
   transform: scale(1.1);
+}
+.card-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .card-title {
+    display: flex;
+    width: 50%;
+    flex-wrap: wrap;
+    text-align: left;
+  }
+  .delete {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .icon {
+      width: 20px;
+      height: 20px;
+    }
+  }
 }
 </style>
 

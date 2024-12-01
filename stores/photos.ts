@@ -1,35 +1,79 @@
-// src/stores/photos.ts
 import { defineStore } from 'pinia';
 import { reactive } from 'vue';
-import { saveToIndexedDB, loadFromIndexedDB } from '~/utils/indexedBD';
+import { saveToIndexedDB, loadFromIndexedDB, deleteFromIndexedDB } from '~/utils/indexedBD';
 
 export const usePhotos = defineStore('photos', () => {
-    // Состояние для списка фотографий
     const photos = reactive<{ name: string; url: string }[]>([]);
 
-    // Загрузка фотографий из IndexedDB
+    // Загрузка фотографий
     const loadPhotos = async () => {
         try {
             const savedPhotos = await loadFromIndexedDB();
-            photos.splice(0, photos.length, ...savedPhotos); // Обновляем массив с фотографиями
-            console.log('Загружены фотографии:', photos); // Логирование
+            photos.splice(0, photos.length, ...savedPhotos);
         } catch (error) {
             console.error('Failed to load photos from IndexedDB:', error);
         }
     };
 
-    // Добавление фотографии в список и сохранение в IndexedDB
+    // Добавление фотографии
     const addPhoto = async (photo: { name: string; url: string }) => {
-        photos.push(photo); // Добавляем фотографию в состояние
-        console.log('Добавлена фотография:', photo); // Логирование
+        photos.push(photo);
         try {
-            await saveToIndexedDB(photo); // Сохраняем в IndexedDB
+            await saveToIndexedDB(photo);
         } catch (error) {
             console.error('Failed to save photo to IndexedDB:', error);
         }
     };
 
-    return { photos, loadPhotos, addPhoto };
+    // Удаление фотографии
+    const deletePhoto = async (url: string) => {
+        const index = photos.findIndex(photo => photo.url === url);
+        if (index !== -1) {
+            photos.splice(index, 1);
+        }
+
+        try {
+            await deleteFromIndexedDB(url);
+        } catch (error) {
+            console.error('Failed to delete photo from IndexedDB:', error);
+        }
+    };
+
+    const editPhoto = async (updatedPhoto: { name: string; url: string }) => {
+        const index = photos.findIndex(photo => photo.url === updatedPhoto.url);
+        if (index !== -1) {
+            photos[index] = updatedPhoto; // Обновляем фото в массиве
+        }
+
+        try {
+            await saveToIndexedDB(updatedPhoto); // Сохраняем изменения в IndexedDB
+        } catch (error) {
+            console.error('Failed to update photo in IndexedDB:', error);
+        }
+    };
+
+    const updatePhoto = async (updatedPhoto: { name: string; url: string }) => {
+        const index = photos.findIndex((photo) => photo.url === updatedPhoto.url);
+        if (index !== -1) {
+            photos[index] = { ...photos[index], ...updatedPhoto }; // Обновляем данные локально
+        }
+
+        try {
+            await saveToIndexedDB(updatedPhoto); // Обновляем данные в IndexedDB
+            console.log('Фотография успешно обновлена в IndexedDB:', updatedPhoto);
+        } catch (error) {
+            console.error('Ошибка при обновлении фотографии в IndexedDB:', error);
+        }
+    };
+
+    return {
+        photos,
+        loadPhotos,
+        addPhoto,
+        deletePhoto,
+        editPhoto,
+        updatePhoto
+    };
 });
 
 

@@ -7,7 +7,7 @@ export const openDatabase = () => {
         request.onupgradeneeded = (event) => {
             const db = (event.target as IDBRequest).result;
             if (!db.objectStoreNames.contains('photos')) {
-                db.createObjectStore('photos', { keyPath: 'url' });
+                db.createObjectStore('photos', { keyPath: 'id' }); // Используем `id` как уникальный ключ
             }
         };
 
@@ -15,6 +15,7 @@ export const openDatabase = () => {
         request.onerror = () => reject('Failed to open database');
     });
 };
+
 
 export const saveToIndexedDB = async (photo: { name: string; url: string }) => {
     const db = await openDatabase();
@@ -40,6 +41,29 @@ export const loadFromIndexedDB = async (): Promise<{ name: string; url: string }
             resolve(photos.result);
         };
         photos.onerror = () => reject('Failed to load photos');
+    });
+};
+
+export const deleteFromIndexedDB = async (url: string) => {
+    const db = await openDatabase();
+    const transaction = db.transaction('photos', 'readwrite');
+    const store = transaction.objectStore('photos');
+    store.delete(url);  // Удаляем фото по ключу url
+    return new Promise<void>((resolve, reject) => {
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject('Failed to delete photo');
+    });
+};
+
+export const updateInIndexedDB = async (photo: { name: string; url: string }) => {
+    const db = await openDatabase();
+    const transaction = db.transaction('photos', 'readwrite');
+    const store = transaction.objectStore('photos');
+    store.put(photo); // `put` обновляет запись, если ключ уже существует
+
+    return new Promise<void>((resolve, reject) => {
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = () => reject('Failed to update photo');
     });
 };
 

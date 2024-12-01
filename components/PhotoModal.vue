@@ -2,7 +2,7 @@
   <v-dialog v-model="dialog" max-width="500px" persistent hide-overlay>
     <v-card>
       <v-card-title>
-        <span class="text-h5">Добавить фотографию</span>
+        <span class="text-h5">Добавить фотографию в альбом</span>
       </v-card-title>
       <v-card-text>
         <v-text-field v-model="photoName" label="Название фотографии" required></v-text-field>
@@ -11,7 +11,7 @@
       </v-card-text>
       <v-card-actions>
         <v-btn @click="closeModal">Отмена</v-btn>
-        <v-btn color="primary" @click="addPhotoHandler">Добавить</v-btn>
+        <v-btn color="primary" @click="addPhoto">Добавить фотографию</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -44,7 +44,7 @@ const closeModal = () => {
 }
 
 // Обработчик для добавления фотографии
-const addPhotoHandler = () => {
+const addPhoto = () => {
   if (photoName.value && photoUrl.value) {
     // Эмитим событие с данными фотографии
     emit('add-photo', { name: photoName.value, url: photoUrl.value })
@@ -58,9 +58,7 @@ const addPhotoHandler = () => {
 watch(() => props.modelValue, (newValue) => {
   dialog.value = newValue
 })
-
 </script>
-
 
 
 <style lang="scss">

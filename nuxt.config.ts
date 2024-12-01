@@ -7,8 +7,9 @@ export default defineNuxtConfig({
   // Подключение стилей
   css: [
     'vuetify/styles', // Подключение стилей Vuetify
-    '~/assets/styles/css/main.css', // Ваши собственные стили
-    'bootstrap/dist/css/bootstrap.min.css' // Подключение Bootstrap
+    '~/assets/styles/css/main.css',
+    'bootstrap/dist/css/bootstrap.min.css', // Подключение Bootstrap
+    '~/assets/styles/scss/custom-bootstrap.scss',
   ],
 
   // Настройки для сборки

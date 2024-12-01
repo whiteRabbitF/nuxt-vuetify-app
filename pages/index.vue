@@ -1,8 +1,7 @@
 <template>
   <section>
-    <h1>Добро пожаловать в галерею!</h1>
-    <span>Добавляйте фотографии и пополняйте свою галерею совершенно бесплатно!</span>
-    <GalleryGrid />
+    <span class="ma-10 mb-10 d-block">Добавляйте фотографии и пополняйте свою галерею совершенно бесплатно!</span>
+    <GalleryGrid class="m-lg-auto" />
   </section>
 </template>
 
@@ -13,6 +12,10 @@ import GalleryGrid from '~/components/GalleryGrid.vue'
 <style lang="scss" scoped>
 section {
   text-align: center;
-  padding: 2rem;
+  //padding: 2rem;
+
+  span {
+    font-size: 30px;
+  }
 }
 </style>
